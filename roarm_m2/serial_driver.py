@@ -212,8 +212,10 @@ class RoArmDriver:
                     data = json.loads(decoded)
                     if isinstance(data, dict):
                         if data == command:
-                            # Ignore command echoes from the firmare
-                            continue
+                            # The arm echoes commands. For T:105 (status), it follows the echo with a T:1051 response. 
+                            # For motion commands like T:101, the echo IS the only response.
+                            if command.get("T") == 105:
+                                continue
                         return data
                 except json.JSONDecodeError:
                     # Print and ignore non-JSON diagnostic messages like "Servo ID:14 status: failed."
