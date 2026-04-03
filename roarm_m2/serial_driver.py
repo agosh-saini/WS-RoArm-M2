@@ -211,6 +211,9 @@ class RoArmDriver:
                 try:
                     data = json.loads(decoded)
                     if isinstance(data, dict):
+                        if data == command:
+                            # Ignore command echoes from the firmare
+                            continue
                         return data
                 except json.JSONDecodeError:
                     # Print and ignore non-JSON diagnostic messages like "Servo ID:14 status: failed."
