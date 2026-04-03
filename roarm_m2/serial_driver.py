@@ -173,8 +173,8 @@ class RoArmDriver:
         return the parsed response.
 
         The protocol frame is:
-            TX: <json>\\n
-            RX: <json>\\n
+            TX: <json>\n
+            RX: <json>\n
 
         Args:
             command: Python dict to serialize and transmit.
@@ -184,8 +184,7 @@ class RoArmDriver:
 
         Raises:
             RuntimeError:  If not connected.
-            TimeoutError:  If no response arrives within self._timeout.
-            ValueError:    If the response is not valid JSON.
+            TimeoutError:  If no valid JSON response arrives within self._timeout.
         """
         if not self.is_connected:
             raise RuntimeError("Not connected — call connect() first.")
@@ -197,17 +196,27 @@ class RoArmDriver:
             self._serial.reset_input_buffer()
             self._serial.write(payload.encode("utf-8"))
 
-            raw = self._serial.readline()
+            end_time = time.time() + self._timeout
 
-        if not raw:
-            raise TimeoutError(
-                f"No response from arm within {self._timeout}s "
-                f"(command T={command.get('T')})"
-            )
+            while time.time() < end_time:
+                raw = self._serial.readline()
+                if not raw:
+                    # Timeout reached (readline returned empty bytes)
+                    break
 
-        try:
-            return json.loads(raw.decode("utf-8").strip())
-        except json.JSONDecodeError as exc:
-            raise ValueError(
-                f"Arm returned non-JSON data: {raw!r}"
-            ) from exc
+                decoded = raw.decode("utf-8", errors="replace").strip()
+                if not decoded:
+                    continue
+
+                try:
+                    data = json.loads(decoded)
+                    if isinstance(data, dict):
+                        return data
+                except json.JSONDecodeError:
+                    # Print and ignore non-JSON diagnostic messages like "Servo ID:14 status: failed."
+                    print(f"Arm returned non-JSON data: {raw!r}")
+
+        raise TimeoutError(
+            f"No valid JSON response from arm within {self._timeout}s "
+            f"(command T={command.get('T')})"
+        )
