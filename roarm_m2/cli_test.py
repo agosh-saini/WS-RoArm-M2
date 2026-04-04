@@ -102,8 +102,6 @@ Examples:
     parser.add_argument(
         "--intensity",
         type=int,
-        nargs=1,
-        metavar=("intensity"),
         help="LED intensity values 0-255 (required when --action led)",
     )
 
