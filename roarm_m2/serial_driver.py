@@ -175,7 +175,7 @@ class RoArmDriver:
             Parsed JSON response confirming the LED change.
         """
         intensity = max(0, min(255, int(intensity)))
-        return self._send({"T": CMD_LED, "intensity": intensity})
+        return self._send({"T": CMD_LED, "led": intensity})
 
     # ------------------------------------------------------------------
     # Internal helpers
