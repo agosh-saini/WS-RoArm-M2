@@ -41,7 +41,7 @@ DEFAULT_TIMEOUT = 2.0  # seconds to wait for a reply
 CMD_HOME = 100
 CMD_JOINT = 101
 CMD_STATUS = 105
-CMD_LED = 230
+CMD_LED = 114
 CMD_STOP = 0
 
 
