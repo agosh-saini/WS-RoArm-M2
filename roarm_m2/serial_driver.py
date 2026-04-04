@@ -166,7 +166,7 @@ class RoArmDriver:
         return self._send({"T": CMD_STOP})
 
     def set_led(self, intensity: int) -> dict[str, Any]:
-        """Set the RGB LED intensity on the RoArm base.
+        """Set the LED intensity on the RoArm base.
 
         Args:
             intensity: LED intensity value (0-255)

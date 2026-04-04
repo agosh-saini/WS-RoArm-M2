@@ -123,8 +123,8 @@ def main() -> None:
         if args.joint is None or args.angle is None:
             parser.error("--joint and --angle are required when --action is 'joint'.")
     elif args.action == "led":
-        if args.rgb is None:
-            parser.error("--led itensity is required when --action is 'led'.")
+        if args.intensity is None:
+            parser.error("--led intensity is required when --action is 'led'.")
 
     try:
         with RoArmDriver(args.port, baud=args.baud, timeout=args.timeout) as arm:
