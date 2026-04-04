@@ -77,7 +77,7 @@ Examples:
     )
     parser.add_argument(
         "--action",
-        choices=["joint", "status", "home", "stop"],
+        choices=["joint", "status", "home", "stop", "color"],
         default="joint",
         help="Action to perform (default: joint)",
     )
@@ -99,6 +99,13 @@ Examples:
         default=50.0,
         help="Movement speed 0–100 (default: 50, used with --action joint)",
     )
+    parser.add_argument(
+        "--rgb",
+        type=int,
+        nargs=3,
+        metavar=("R", "G", "B"),
+        help="RGB color values 0-255 (required when --action color)",
+    )
 
     return parser
 
@@ -111,10 +118,13 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    # Validate joint-move arguments upfront for a clear error message.
+    # Validate arguments upfront for a clear error message.
     if args.action == "joint":
         if args.joint is None or args.angle is None:
             parser.error("--joint and --angle are required when --action is 'joint'.")
+    elif args.action == "color":
+        if args.rgb is None:
+            parser.error("--rgb R G B is required when --action is 'color'.")
 
     try:
         with RoArmDriver(args.port, baud=args.baud, timeout=args.timeout) as arm:
@@ -133,6 +143,11 @@ def main() -> None:
             elif args.action == "stop":
                 print("Sending emergency stop…")
                 response = arm.stop()
+
+            elif args.action == "color":
+                r, g, b = args.rgb
+                print(f"Setting LED color to R:{r} G:{g} B:{b}…")
+                response = arm.set_color(r, g, b)
 
         # Pretty-print so the response is easy to read in a terminal.
         print("Response:", json.dumps(response, indent=2))

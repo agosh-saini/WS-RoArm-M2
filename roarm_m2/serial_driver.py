@@ -41,6 +41,7 @@ DEFAULT_TIMEOUT = 2.0  # seconds to wait for a reply
 CMD_HOME = 100
 CMD_JOINT = 101
 CMD_STATUS = 105
+CMD_COLOR = 230
 CMD_STOP = 0
 
 
@@ -163,6 +164,22 @@ class RoArmDriver:
             Parsed JSON response confirming the stop was received.
         """
         return self._send({"T": CMD_STOP})
+
+    def set_color(self, r: int, g: int, b: int) -> dict[str, Any]:
+        """Set the RGB LED color on the RoArm base.
+
+        Args:
+            r: Red value (0-255)
+            g: Green value (0-255)
+            b: Blue value (0-255)
+
+        Returns:
+            Parsed JSON response confirming the color change.
+        """
+        r = max(0, min(255, int(r)))
+        g = max(0, min(255, int(g)))
+        b = max(0, min(255, int(b)))
+        return self._send({"T": CMD_COLOR, "r": r, "g": g, "b": b})
 
     # ------------------------------------------------------------------
     # Internal helpers
