@@ -35,9 +35,9 @@ Send the arm safely to structural zero (Home):
 python roarm_m2/cli_test.py --port /dev/ttyUSB0 --action home
 ```
 
-Change the base LED color (e.g., to Blue):
+Change the base LED intensity:
 ```bash
-python roarm_m2/cli_test.py --port /dev/ttyUSB0 --action color --rgb 0 0 255
+python roarm_m2/cli_test.py --port /dev/ttyUSB0 --action led --intensity 255
 ```
 
 ## Joint Mapping Reference

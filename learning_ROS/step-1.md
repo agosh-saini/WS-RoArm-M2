@@ -87,6 +87,32 @@ immediately.
 
 ---
 
+## Deep Dive: How the Serial Driver Actually Works
+
+The driver (`serial_driver.py`) is structured to handle all the messiness of the hardware communication so the CLI or ROS node doesn't have to. Here's a breakdown of the key mechanisms:
+
+### 1. Thread Safety (`self._lock`)
+In robotics, you often have one thread reading sensor data constantly while another sporadically sends movement commands. Without a lock, both might try to talk to the serial port simultaneously, mangling the bytes. The driver uses Python's `threading.Lock()` to guarantee only one transaction occurs at a time.
+
+### 2. The Command/Response Loop
+The RoArm communicates via newline-delimited JSON. When `_send()` is called, it:
+- Formats a Python dictionary (like `{"T": 101, "joint": 1, ...}`) into a strict JSON string and appends a newline `\n`.
+- Flushes stale data from the serial buffer using `reset_input_buffer()`.
+- Writes the JSON payload.
+- Computes a safe timeout window and begins reading.
+
+### 3. Handling Firmware Spam and Command Echoes
+This is where the magic happens. The firmware often throws raw text strings over UART (like `Servo ID:15 status: failed.\r\n`). Furthermore, it systematically *echoes* exactly what we send it before answering. 
+
+The driver's `while` loop aggressively filters out this noise:
+- It reads a line and passes it to `json.loads()`.
+- If `loads()` fails (a `JSONDecodeError`), we know it's a diagnostic string. We log it and continue.
+- If `loads()` succeeds, we check if the returned dictionary exactly matches the command we just sent. If it does (and we're expecting a dedicated answer, like with the `T: 105` status command), we discard the echo and read the next line. 
+
+This robust parsing logic is the only reason the Python layer doesn't freeze or crash when the physical arm sends unexpected hardware errors.
+
+---
+
 ## How to Move the RoArm M2
 
 ### Prerequisites
@@ -196,6 +222,16 @@ python cli_test.py --port /dev/ttyUSB0 --action stop
 
 Halts all joint motion immediately. Use this if the arm is moving in an
 unexpected direction — **always have this command ready in a second terminal**.
+
+---
+
+#### Control Base LEDs
+
+```bash
+python cli_test.py --port /dev/ttyUSB0 --action led --intensity 255
+```
+
+Easily change the lighting intensity (0-255) on the robotic arm directly via CLI.
 
 ---
 
